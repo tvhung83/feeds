@@ -25,4 +25,8 @@ def index(code = 'phim-le', page = 1):
     response.content_type = 'application/json'
     return dumps(list(results))
 
-bottle.run(host='0.0.0.0', port=argv[1], debug=True, reloader=True)
+@get('/health')
+def health():
+    return "ok"
+    
+bottle.run(host='0.0.0.0', port=argv[1], debug=False, reloader=False)
