@@ -16,16 +16,19 @@ class JSONEncoder(json.JSONEncoder):
             return str(o)
         return json.JSONEncoder.default(self, o)
 
-@get('/<code>')
-@get('/<code>/<page:int>')
+page_size = 20
+
+@get('/category/<code>')
+@get('/category/<code>/<page:int>')
 def index(code = 'phim-le', page = 1):
     results = db.items.find({'categories': code }, \
-                { 'title': 1, 'thumbnail': 1, 'links': 1 } ) \
+                { 'title': 1, 'thumbnail': 1 } ) \
                 .sort('publishedAt',  pymongo.DESCENDING) \
-                .skip((page-1)*20 if page > 1 else 0) \
-                .limit(20)
+                .skip((page-1)*page_size if page > 1 else 0) \
+                .limit(page_size)
+    total = int(db.items.find({'categories': code }).count() / page_size)
     response.content_type = 'application/json'
-    return JSONEncoder().encode(list(results))
+    return JSONEncoder().encode({ 'content': list(results), 'total': total })
 
 @get('/id/<id>')
 def index(id):
