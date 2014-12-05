@@ -32,7 +32,7 @@ def index(code = 'phim-le', page = 1):
 
 @get('/id/<id>')
 def index(id):
-    item = db.items.find_one({'_id': ObjectId(id) }, { 'thumbnail': 1, 'links': 1, '_id': 0 } )
+    item = db.items.find_one({'_id': ObjectId(id) }, { 'title': 1, 'thumbnail': 1, 'links': 1, '_id': 0 } )
     response.content_type = 'application/json'
     return JSONEncoder().encode(item)
 
