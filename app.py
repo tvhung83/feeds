@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
+import urllib2
 import bottle
 import pymongo
 import json
@@ -17,6 +19,7 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 page_size = 20
+direct_prefix = 'http://fshare.herokuapp.com'
 
 @get('/category/<code>')
 @get('/category/<code>/<page:int>')
@@ -33,6 +36,12 @@ def index(code = 'phim-le', page = 1):
 @get('/id/<id>')
 def index(id):
     item = db.items.find_one({'_id': ObjectId(id) }, { 'thumbnail': 1, 'links': 1, '_id': 0 } )
+    if item and item['links']:
+        for link in item['links']:
+            file_id = re.search('\/file\/(\w+)', link['link']).group(0)
+            req = urllib2.Request(direct_prefix + file_id)
+            res = urllib2.urlopen(req)
+            link['link'] = res.geturl()
     response.content_type = 'application/json'
     return JSONEncoder().encode(item)
 
