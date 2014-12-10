@@ -53,6 +53,10 @@ def item(id):
     response.content_type = 'application/json'
     return JSONEncoder().encode(item)
 
+@route('/favicon.ico')
+def favicon():
+    return static_file('favicon.ico', root='./')
+
 @get('/health')
 def health():
     return "ok"
