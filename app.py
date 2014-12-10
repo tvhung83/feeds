@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import bottle
 import pymongo
 import json
@@ -20,18 +21,34 @@ page_size = 20
 
 @get('/category/<code>')
 @get('/category/<code>/<page:int>')
-def index(code = 'phim-le', page = 1):
-    results = db.items.find({'categories': code }, \
+def category(code = 'phim-le', page = 1):
+    categories = code.split(',')
+    results = db.items.find({'categories': { "$all": categories } }, \
                 { 'title': 1, 'thumbnail': 1 } ) \
                 .sort('publishedAt',  pymongo.DESCENDING) \
                 .skip((page-1)*page_size if page > 1 else 0) \
                 .limit(page_size)
-    total = int(db.items.find({'categories': code }).count() / page_size)
+    count = db.items.find({'categories': { "$all": categories } }).count()
+    total = ((count - 1) // page_size) + 1
+    response.content_type = 'application/json'
+    return JSONEncoder().encode({ 'content': list(results), 'total': total })
+
+@get('/search/<keyword>')
+@get('/search/<keyword>/<page:int>')
+def search(keyword, page = 1):
+    words = re.split(" +", keyword)
+    results = db.items.find({'tags': { "$in": words }}, \
+                { 'title': 1, 'thumbnail': 1 } ) \
+                .sort('publishedAt',  pymongo.DESCENDING) \
+                .skip((page-1)*page_size if page > 1 else 0) \
+                .limit(page_size)
+    count = db.items.find({'tags': { "$in": words }}).count()
+    total = ((count - 1) // page_size) + 1
     response.content_type = 'application/json'
     return JSONEncoder().encode({ 'content': list(results), 'total': total })
 
 @get('/id/<id>')
-def index(id):
+def item(id):
     item = db.items.find_one({'_id': ObjectId(id) }, { 'title': 1, 'thumbnail': 1, 'links': 1, '_id': 0 } )
     response.content_type = 'application/json'
     return JSONEncoder().encode(item)
